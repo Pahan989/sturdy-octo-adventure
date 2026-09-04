@@ -3,6 +3,7 @@
   "short_name": "Coco",
   "description": "A tropical hub for coconut lovers!",
   "start_url": "https://pahan989.github.io/sturdy-octo-adventure/",
+  "scope": "https://pahan989.github.io/sturdy-octo-adventure/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#00a86b",
