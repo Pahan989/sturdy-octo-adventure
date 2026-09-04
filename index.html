@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Coco TY — ශ්‍රී ලංකා පොල් වෙළඳපොළ | Sri Lanka Coconut Trade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Animated Particle Background -->
+  <canvas id="particleCanvas"></canvas>
+
+  <div class="mobile-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-main">
+        <div class="brand-group">
+          <div class="logo-badge">
+            <span class="logo-icon">🥥</span>
+            <span class="logo-ring"></span>
+          </div>
+          <div>
+            <h1 class="brand-title">Coco <span class="brand-accent">TY</span></h1>
+            <p class="brand-subtitle" data-i18n="tagline">ශ්‍රී ලංකා පොල් වෙළඳ ද්වාරය</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Toggle Language" title="Switch Language">
+            <span class="lang-opt lang-si active">සිං</span>
+            <span class="lang-divider">/</span>
+            <span class="lang-opt lang-en">EN</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Auction Notice Bar with Auto-Update Indicator -->
+      <div class="market-status-bar">
+        <div class="pulse-indicator">
+          <span class="pulse-dot"></span>
+          <span class="pulse-text" data-i18n="marketLive">කොළඹ වෙන්දේසි මිල ගණන් (අද)</span>
+        </div>
+        <div class="auto-update-badge" id="autoUpdateBadge">
+          <span class="auto-dot spinning"></span>
+          <span data-i18n="autoUpdate">ස්වයං-යාවත්</span>
+        </div>
+        <div class="date-badge" id="currentDateBadge"></div>
+      </div>
+
+      <!-- CDA Government Data Source Banner -->
+      <div class="cda-source-bar" id="cdaSourceBar">
+        <div class="cda-icon">🏛️</div>
+        <div class="cda-text">
+          <span data-i18n="cdaSource">මූලාශ්‍රය: පොල් සංවර්ධන අධිකාරිය (CDA)</span>
+        </div>
+        <div class="cda-live-tag">
+          <span class="live-blink"></span>
+          <span data-i18n="liveSync">LIVE SYNC</span>
+        </div>
+      </div>
+
+      <!-- Horizontal Continuous Price Ticker Strip -->
+      <div class="ticker-wrapper" aria-label="Live Price Ticker">
+        <div class="ticker-label" data-i18n="tickerLabel">මිල සටහන:</div>
+        <div class="ticker-viewport">
+          <div class="ticker-track" id="tickerTrack"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Tab Content Area -->
+    <main class="app-main">
+      
+      <!-- TAB 1: PRICES DASHBOARD -->
+      <section id="tab-prices" class="tab-view active" role="tabpanel">
+        <div class="section-intro">
+          <div>
+            <h2 class="section-title" data-i18n="pricesTitle">දෛනික භාණ්ඩ මිල ගණන්</h2>
+            <p class="section-desc" data-i18n="pricesDesc">පොල් සංවර්ධන අධිකාරියේ සහ ප්‍රධාන වෙළඳපොළ සාමාන්‍ය මිල</p>
+          </div>
+          <div class="header-actions-group">
+            <div class="next-update-timer" id="nextUpdateTimer">
+              <span class="timer-icon">⏱</span>
+              <span class="timer-text" id="timerCountdown">04:59</span>
+            </div>
+            <button class="refresh-pill-btn" id="refreshPricesBtn" title="Refresh prices">
+              <span class="refresh-icon">↻</span>
+              <span data-i18n="updatedNow">යාවත්කාලීනයි</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Last Updated Timestamp -->
+        <div class="last-updated-strip" id="lastUpdatedStrip">
+          <span>🕐</span>
+          <span data-i18n="lastUpdated">අවසන් යාවත්කාලීනය:</span>
+          <span id="lastUpdatedTime" class="updated-time"></span>
+          <span class="source-tag">CDA API</span>
+        </div>
+
+        <!-- 5 Commodity Cards Grid -->
+        <div class="commodity-grid" id="commodityCardsContainer"></div>
+
+        <!-- Interactive 8-Week Trend Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-badge" data-i18n="trendBadge">මිල ප්‍රවණතාව</div>
+              <h3 class="chart-title" data-i18n="chartTitle">සති 8 ක මිල විචලනය</h3>
+            </div>
+            <div class="chart-select-wrapper">
+              <select id="chartCommoditySelect" class="styled-select" aria-label="Select Commodity for Chart"></select>
+            </div>
+          </div>
+          <div class="chart-summary-strip" id="chartSummaryStrip"></div>
+          <div class="svg-chart-wrapper" id="svgChartWrapper">
+            <svg id="trendSvgChart" viewBox="0 0 460 210" preserveAspectRatio="xMidYMid meet"></svg>
+            <div id="chartTooltip" class="chart-tooltip"></div>
+          </div>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-dot current"></span> <span data-i18n="legendRecorded">සතිපතා වෙන්දේසි සාමාන්‍යය</span></span>
+            <span class="legend-item"><span class="legend-dot benchmark"></span> <span data-i18n="legendGovRef">රජයේ අවම මිළ</span></span>
+          </div>
+        </div>
+
+        <!-- Government Market Stats Panel -->
+        <div class="gov-stats-panel">
+          <div class="gov-stats-title">
+            <span>🏛️</span>
+            <span data-i18n="govStatsTitle">රජයේ වෙළඳපොළ සාරාංශය</span>
+          </div>
+          <div class="gov-stats-grid" id="govStatsGrid">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Sri Lanka Coconut Triangle Market Notice -->
+        <div class="info-banner">
+          <div class="info-icon">🌴</div>
+          <div class="info-text">
+            <h4 data-i18n="infoBannerTitle">පොල් ත්‍රිකෝණයේ වෙළඳ තොරතුරු</h4>
+            <p data-i18n="infoBannerText">කුරුණෑගල, පුත්තලම සහ ගම්පහ දිස්ත්‍රික්කවල තොග ගනුදෙනු සඳහා ප්‍රවාහන ගාස්තු සැලකිල්ලට ගෙන මිල සංශෝධනය විය හැක.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: MILLS DIRECTORY -->
+      <section id="tab-mills" class="tab-view" role="tabpanel">
+        <div class="section-intro">
+          <div>
+            <h2 class="section-title" data-i18n="millsTitle">මෝල් නාමාවලිය</h2>
+            <p class="section-desc" data-i18n="millsDesc">ශ්‍රී ලංකාවේ ලියාපදිංචි පොල්, තෙල් සහ කොහු මෝල්</p>
+          </div>
+          <span class="counter-badge" id="millsCountBadge">14 මෝල්</span>
+        </div>
+        <div class="filter-panel">
+          <div class="category-pills-scroll" id="millCategoryPills">
+            <button class="pill-btn active" data-category="all" data-i18n="catAll">සියල්ල</button>
+            <button class="pill-btn" data-category="coconut" data-i18n="catCoconutMills">පොල් මෝල්</button>
+            <button class="pill-btn" data-category="oil" data-i18n="catOilMills">තෙල් මෝල්</button>
+            <button class="pill-btn" data-category="coir" data-i18n="catCoirMills">කොහු මෝල්</button>
+          </div>
+          <div class="filter-row">
+            <div class="search-input-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="millSearchInput" placeholder="නම හෝ නගරය සොයන්න..." data-i18n-placeholder="searchMillPlaceholder">
+            </div>
+            <select id="millDistrictSelect" class="styled-select district-select" aria-label="Select District">
+              <option value="all" data-i18n="allDistricts">සියලු දිස්ත්‍රික්ක</option>
+              <option value="Kurunegala">කුරුණෑගල</option>
+              <option value="Puttalam">පුත්තලම</option>
+              <option value="Gampaha">ගම්පහ</option>
+              <option value="Colombo">කොළඹ</option>
+              <option value="Kalutara">කළුතර</option>
+              <option value="Galle">ගාල්ල</option>
+              <option value="Matara">මාතර</option>
+              <option value="Hambantota">හම්බන්තොට</option>
+            </select>
+          </div>
+        </div>
+        <div class="cards-stack" id="millsListContainer"></div>
+      </section>
+
+      <!-- TAB 3: MARKETPLACE -->
+      <section id="tab-market" class="tab-view" role="tabpanel">
+        <div class="section-intro">
+          <div>
+            <h2 class="section-title" data-i18n="marketTitle">ගැනුම් / සැපයුම් වෙළඳපොළ</h2>
+            <p class="section-desc" data-i18n="marketDesc">සෘජු වෙළඳ දැන්වීම් සහ ව්‍යාපාරික සබඳතා</p>
+          </div>
+          <button class="primary-action-pill" id="postListingBtn">
+            <span>+</span> <span data-i18n="postListing">දැන්වීමක් පළ කරන්න</span>
+          </button>
+        </div>
+        <div class="market-category-tabs" id="marketCategoryTabs">
+          <button class="m-cat-tab active" data-market-cat="coconut"><span class="m-cat-icon">🥥</span><span class="m-cat-text" data-i18n="commCoconut">පොල්</span></button>
+          <button class="m-cat-tab" data-market-cat="oil"><span class="m-cat-icon">🫗</span><span class="m-cat-text" data-i18n="commOil">පොල් තෙල්</span></button>
+          <button class="m-cat-tab" data-market-cat="coir"><span class="m-cat-icon">🧶</span><span class="m-cat-text" data-i18n="commCoir">කොහු කෙඳි</span></button>
+          <button class="m-cat-tab" data-market-cat="husk"><span class="m-cat-icon">🪵</span><span class="m-cat-text" data-i18n="commHusk">පොල් ලෙලි</span></button>
+          <button class="m-cat-tab" data-market-cat="shell"><span class="m-cat-icon">🥣</span><span class="m-cat-text" data-i18n="commShell">පොල් කටු</span></button>
+        </div>
+        <div class="sub-filter-strip">
+          <div class="trade-type-toggles" id="tradeTypeFilters">
+            <button class="trade-toggle-btn active" data-type="all" data-i18n="tradeAll">සියල්ල</button>
+            <button class="trade-toggle-btn" data-type="buyer" data-i18n="tradeBuyerShort">ගැනුම්කරු</button>
+            <button class="trade-toggle-btn" data-type="supplier" data-i18n="tradeSupplierShort">සැපයුම්කරු</button>
+          </div>
+          <div class="market-stat-pill" id="marketCountBadge">8 දැන්වීම්</div>
+        </div>
+        <div class="cards-stack" id="marketListContainer"></div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav" aria-label="Main Navigation">
+      <button class="nav-item active" id="tab-btn-prices" data-target="tab-prices">
+        <span class="nav-icon">📈</span>
+        <span class="nav-label" data-i18n="navPrices">මිල ගණන්</span>
+        <span class="nav-active-bar"></span>
+      </button>
+      <button class="nav-item" id="tab-btn-mills" data-target="tab-mills">
+        <span class="nav-icon">🏭</span>
+        <span class="nav-label" data-i18n="navMills">මෝල්</span>
+        <span class="nav-active-bar"></span>
+      </button>
+      <button class="nav-item" id="tab-btn-market" data-target="tab-market">
+        <span class="nav-icon">🤝</span>
+        <span class="nav-label" data-i18n="navMarket">වෙළඳපොළ</span>
+        <span class="nav-active-bar"></span>
+      </button>
+    </nav>
+
+    <!-- ============ MODALS ============ -->
+
+    <!-- Unlock Contact Lead-Gen Modal with Payment Methods -->
+    <div id="unlockModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="unlockModalTitle">
+      <div class="modal-card">
+        <button class="modal-close-btn" id="closeUnlockModal" aria-label="Close">&times;</button>
+        <div class="modal-header-badge">
+          <span class="lock-circle">🔐</span>
+          <span class="badge-tag" data-i18n="verifiedLead">තහවුරු කළ වෙළඳ සබඳතාව</span>
+        </div>
+        <h3 id="unlockModalTitle" class="modal-title" data-i18n="unlockTitle">සම්බන්ධතා විස්තර අගුළු හරින්න</h3>
+        <p class="modal-subtitle" data-i18n="unlockSubtitle">මෙම වෙළඳකරුගේ සෘජු දුරකථන අංකය ලබා ගැනීමට රු. 150 ක ගාස්තුවක් අදාළ වේ.</p>
+        <div class="unlock-summary-box" id="unlockListingSummary"></div>
+
+        <!-- Fee Breakdown -->
+        <div class="fee-receipt">
+          <div class="fee-row"><span data-i18n="serviceFee">සෘජු සබඳතා ගාස්තුව</span><span class="fee-amount">රු. 150.00</span></div>
+          <div class="fee-row fee-discount"><span data-i18n="instantActivation">ක්ෂණික සක්‍රිය කිරීම</span><span class="free-pill" data-i18n="freeInstant">නොමිලේ</span></div>
+          <div class="fee-divider"></div>
+          <div class="fee-row fee-total"><span data-i18n="totalPayable">මුළු මුදල</span><span class="fee-final">රු. 150.00</span></div>
+        </div>
+
+        <!-- Sri Lankan Payment Methods -->
+        <div class="payment-section-title" data-i18n="choosePayment">ගෙවීම් ක්‍රමය තෝරන්න</div>
+        <div class="payment-methods-grid" id="paymentMethodsGrid">
+          <label class="pay-card selected" data-method="ez_cash">
+            <input type="radio" name="payMethod" value="ez_cash" checked>
+            <div class="pay-card-icon">
+              <span class="pay-emoji">📱</span>
+            </div>
+            <div class="pay-card-info">
+              <span class="pay-card-name">Dialog eZ Cash</span>
+              <span class="pay-card-desc">ක්ෂණික ගෙවීම</span>
+            </div>
+            <span class="pay-check">✓</span>
+          </label>
+          <label class="pay-card" data-method="mcash">
+            <input type="radio" name="payMethod" value="mcash">
+            <div class="pay-card-icon">
+              <span class="pay-emoji">📲</span>
+            </div>
+            <div class="pay-card-info">
+              <span class="pay-card-name">Mobitel mCash</span>
+              <span class="pay-card-desc">ජංගම මුදල්</span>
+            </div>
+            <span class="pay-check">✓</span>
+          </label>
+          <label class="pay-card" data-method="visa_master">
+            <input type="radio" name="payMethod" value="visa_master">
+            <div class="pay-card-icon">
+              <span class="pay-emoji">💳</span>
+            </div>
+            <div class="pay-card-info">
+              <span class="pay-card-name">Visa / Mastercard</span>
+              <span class="pay-card-desc">ණය/හර පත</span>
+            </div>
+            <span class="pay-check">✓</span>
+          </label>
+          <label class="pay-card" data-method="lankapay">
+            <input type="radio" name="payMethod" value="lankapay">
+            <div class="pay-card-icon">
+              <span class="pay-emoji">🏦</span>
+            </div>
+            <div class="pay-card-info">
+              <span class="pay-card-name">LankaPay QR</span>
+              <span class="pay-card-desc">බැංකු QR</span>
+            </div>
+            <span class="pay-check">✓</span>
+          </label>
+          <label class="pay-card" data-method="sampath_vishwa">
+            <input type="radio" name="payMethod" value="sampath_vishwa">
+            <div class="pay-card-icon">
+              <span class="pay-emoji">🟢</span>
+            </div>
+            <div class="pay-card-info">
+              <span class="pay-card-name">Sampath Vishwa</span>
+              <span class="pay-card-desc">ඩිජිටල් පසුම්බිය</span>
+            </div>
+            <span class="pay-check">✓</span>
+          </label>
+          <label class="pay-card" data-method="frimi">
+            <input type="radio" name="payMethod" value="frimi">
+            <div class="pay-card-icon">
+              <span class="pay-emoji">🔵</span>
+            </div>
+            <div class="pay-card-info">
+              <span class="pay-card-name">FriMi / HNB</span>
+              <span class="pay-card-desc">ඩිජිටල් බැංකුව</span>
+            </div>
+            <span class="pay-check">✓</span>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-unlock-confirm" id="confirmUnlockBtn">
+            <span class="btn-icon">⚡</span>
+            <span data-i18n="confirmUnlockBtn">දැන් අගුළු හරින්න — රු. 150</span>
+          </button>
+          <button class="btn-cancel" id="cancelUnlockBtn" data-i18n="cancelBtn">පසුවට</button>
+        </div>
+        <p class="modal-security-note">
+          <span class="shield-icon">🛡️</span>
+          <span data-i18n="securityGuarantee">100% තහවුරු කළ දුරකථන අංක සහ ආරක්ෂිත ගෙවීම්</span>
+        </p>
+        <div class="payment-logos-strip">
+          <span class="plogo">💳 Visa</span>
+          <span class="plogo">💳 MC</span>
+          <span class="plogo">📱 eZ</span>
+          <span class="plogo">🏦 LP</span>
+          <span class="plogo">🔒 SSL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Processing Overlay -->
+    <div id="paymentProcessingModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-card processing-card">
+        <div class="processing-spinner">
+          <div class="spinner-ring"></div>
+          <div class="spinner-icon">💳</div>
+        </div>
+        <h3 class="modal-title" data-i18n="processingTitle">ගෙවීම සකසමින්...</h3>
+        <p class="modal-subtitle" data-i18n="processingDesc">ඔබගේ ගෙවීම ආරක්ෂිතව සකසනු ලැබේ. කරුණාකර රැඳී සිටින්න.</p>
+        <div class="processing-steps" id="processingSteps">
+          <div class="proc-step active" id="procStep1"><span class="proc-check">⏳</span> <span data-i18n="procStep1">ගෙවීම් ද්වාරයට සම්බන්ධ වෙමින්...</span></div>
+          <div class="proc-step" id="procStep2"><span class="proc-check">⏳</span> <span data-i18n="procStep2">ගනුදෙනුව සත්‍යාපනය කරමින්...</span></div>
+          <div class="proc-step" id="procStep3"><span class="proc-check">⏳</span> <span data-i18n="procStep3">සබඳතාව අගුළු හරිමින්...</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Unlocked Success Modal -->
+    <div id="unlockedSuccessModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-card success-card">
+        <button class="modal-close-btn" id="closeSuccessModal" aria-label="Close">&times;</button>
+        <div class="success-confetti" id="confettiCanvas"></div>
+        <div class="success-icon-badge">✅</div>
+        <h3 class="modal-title" data-i18n="unlockedSuccessTitle">සබඳතාව සාර්ථකව අගුළු හැරිණි!</h3>
+        <p class="modal-subtitle" data-i18n="unlockedSuccessDesc">ඔබට දැන් මෙම වෙළඳ සහකරු සමඟ සෘජුවම සම්බන්ධ විය හැක.</p>
+        <div class="contact-reveal-card" id="revealedContactCard"></div>
+        <div class="receipt-mini" id="receiptMini">
+          <div class="receipt-row"><span>Transaction ID</span><span id="receiptTxId"></span></div>
+          <div class="receipt-row"><span data-i18n="paidAmount">ගෙවූ මුදල</span><span>රු. 150.00</span></div>
+          <div class="receipt-row"><span data-i18n="paymentMethod">ක්‍රමය</span><span id="receiptMethod"></span></div>
+        </div>
+        <button class="btn-primary-full" id="finishSuccessBtn" data-i18n="backToMarket">නැවත වෙළඳපොළට</button>
+      </div>
+    </div>
+
+    <!-- Post Listing Modal -->
+    <div id="postListingModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <button class="modal-close-btn" id="closePostModal" aria-label="Close">&times;</button>
+        <div class="modal-header-badge">
+          <span class="lock-circle">📝</span>
+          <span class="badge-tag" data-i18n="freeListing">නොමිලේ දැන්වීමක්</span>
+        </div>
+        <h3 class="modal-title" data-i18n="postListingTitle">නව දැන්වීමක් එක් කරන්න</h3>
+        <p class="modal-subtitle" data-i18n="postListingSubtitle">දිවයින පුරා සිටින පොල් මෝල් හිමියන් සහ වෙළෙන්දන් වෙත ඔබේ අවශ්‍යතාව දන්වන්න.</p>
+        <form id="newListingForm" class="styled-form" onsubmit="event.preventDefault();">
+          <div class="form-group">
+            <label data-i18n="formRole">ඔබේ භූමිකාව:</label>
+            <div class="form-radio-row">
+              <label class="form-radio-label"><input type="radio" name="listingRole" value="buyer" checked><span data-i18n="tradeBuyerShort">ගැනුම්කරු</span></label>
+              <label class="form-radio-label"><input type="radio" name="listingRole" value="supplier"><span data-i18n="tradeSupplierShort">සැපයුම්කරු</span></label>
+            </div>
+          </div>
+          <div class="form-group"><label data-i18n="formCategory">භාණ්ඩ වර්ගය:</label>
+            <select id="formCommoditySelect" class="styled-select">
+              <option value="coconut">පොල්</option><option value="oil">පොල් තෙල්</option>
+              <option value="coir">කොහු කෙඳි</option><option value="husk">පොල් ලෙලි</option>
+              <option value="shell">පොල් කටු</option>
+            </select>
+          </div>
+          <div class="form-group"><label data-i18n="formDistrict">දිස්ත්‍රික්කය:</label>
+            <select id="formDistrictSelect" class="styled-select">
+              <option value="Kurunegala">කුරුණෑගල</option><option value="Puttalam">පුත්තලම</option>
+              <option value="Gampaha">ගම්පහ</option><option value="Colombo">කොළඹ</option>
+              <option value="Kalutara">කළුතර</option><option value="Galle">ගාල්ල</option>
+            </select>
+          </div>
+          <div class="form-group"><label data-i18n="formQuantity">ප්‍රමාණය:</label>
+            <input type="text" id="formQtyInput" placeholder="උදා: ගෙඩි 20,000 ක් සතිපතා" data-i18n-placeholder="qtyPlaceholder" required>
+          </div>
+          <div class="form-group"><label data-i18n="formPhone">දුරකථන අංකය:</label>
+            <input type="tel" id="formPhoneInput" placeholder="07X XXXXXXX" required>
+          </div>
+          <div class="form-group"><label data-i18n="formNotes">විස්තර / කොන්දේසි:</label>
+            <textarea id="formNotesInput" rows="2" placeholder="මිලදී ගැනීමේ හෝ සැපයීමේ කොන්දේසි..." data-i18n-placeholder="notesPlaceholder"></textarea>
+          </div>
+          <button type="submit" class="btn-primary-full" id="submitListingBtn" data-i18n="submitListing">දැන්වීම පළ කරන්න</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Auto-Update Notification Banner (slides in from top) -->
+    <div id="updateNotificationBanner" class="update-banner hidden">
+      <div class="update-banner-content">
+        <span class="update-icon">🔄</span>
+        <span class="update-text" id="updateBannerText"></span>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="toast-notification hidden">
+      <span class="toast-icon">✓</span>
+      <span class="toast-message" id="toastMessage"></span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
